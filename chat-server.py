@@ -1,6 +1,5 @@
 from xmlrpc.server import SimpleXMLRPCServer
 import xmlrpc.client
-import logging
 
 rooms = {}
 users = {}
@@ -79,14 +78,8 @@ def list_users():
     
 # falta remocao de usuarios, depois reler
 
-class CustomXMLRPCServer(SimpleXMLRPCServer):
-    def log_message(self, format, *args):
-        # Sobrescreve para não exibir logs de requisições
-        pass
-
 def main():
-    # Use o servidor customizado
-    server = CustomXMLRPCServer(('localhost', 9000), allow_none=True)
+    server = SimpleXMLRPCServer(('localhost', 9000), allow_none=True)
     print("Servidor de chat pronto, aguardando conexões!")
 
     server.register_function(create_room, "create_room")
@@ -97,8 +90,6 @@ def main():
 
     binder = xmlrpc.client.ServerProxy('http://localhost:8001')
     binder.register_procedure('chat', 9000)
-
-    logging.getLogger('xmlrpc.server').setLevel(logging.CRITICAL)
 
     server.serve_forever()
 
