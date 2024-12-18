@@ -1,80 +1,104 @@
 from xmlrpc.server import SimpleXMLRPCServer
 import xmlrpc.client
+import logging
 
-import Users
-import User
+rooms = {}
+users = {}
 
-import Rooms
-import Room
+# room vai ser um dicionario com users e messages
+# rooms = {room1, room2, ..., roomN}
+# room1 tambem sera um dicionario, tal que room1 tem uma estrutura de 
+# 'users' e 'messages' 
+# tal que, 
+# room1 = {'users': 'joao', 'helio', 'laizz',
+#          'messages': 'joao': 'oi!', 'helio': 'ola!', ...}
+# rooms sera guardado num arquivo, futuramente.
 
-class ChatServer:
-    def __init__(self):
-        self.rooms = {}
-        self.users = {}
+class User:
+    def __init__(self, name, password):
+        self.name = name
+        self.password = password
 
-    def create_room(self, room_name):
-        if room_name not in self.rooms:
-            self.rooms[room_name] = Room(room_name)
-            return f"Room {room_name} created successfully."
+def register_user(name, password):
+    if name not in users:
+        users[name] = User(name, password)
+        return f"User {name} registered successfully."
+    return f"User {name} is already registered."
+
+def create_room(room_name):
+    if room_name not in rooms:
+        # Initialize room with proper structure
+        rooms[room_name] = {
+            'users': [],
+            'messages': []
+        }
+        return f"Room {room_name} created successfully."
+    return f"Room {room_name} already exists."
+
+def join_room(username, room_name):
+    if room_name in rooms:
+        room = rooms[room_name]
+        # {'messages': {}, 'users': {}}
+        room['users'].append(username)
+
+        return True
+    return False
+    #return f"Room {room_name} does not exist."
+
+
+def send_message(username, room_name, message, recipient=None):
         
-        return f"Room {room_name} already exists."
-
-    def join_room(self, username, room_name):
-        
-        if room_name in self.rooms:
-            room = self.rooms[room_name]
-            room.add_user(username)
-            
-            return {
-                "users": room.get_users(),
-                "messages": room.get_last_messages(),
-            }
-        
+    if room_name not in rooms:
         return f"Room {room_name} does not exist."
 
-    def send_message(self, username, room_name, message, recipient=None):
-        
-        if room_name not in self.rooms:
-            return f"Room {room_name} does not exist."
+    room = rooms[room_name]
 
-        room = self.rooms[room_name]
-
-        if recipient:
-            private_room_name = f"{username}:{recipient}"
+    if recipient:
+        private_room_name = f"{username}:{recipient}"
             
-            if private_room_name not in self.rooms:
-                self.create_room(private_room_name)
+        if private_room_name not in rooms:
+            create_room(private_room_name)
             
-            private_room = self.rooms[private_room_name]
-            private_room.send_message(username, message)
+        private_room = rooms[private_room_name]
+        private_room.send_message(username, message)
         
-        else:
-            room.send_message(username, message)
+    else:
+        if room['messages'] is None:
+            room['messages'] = {}
+        room['messages'].append(username + ":" + message)
 
-        return "Message sent successfully."
+    print(room['messages'][-1])
 
-    def list_rooms(self):
-        return self.rooms.keys()
+    return "Message sent successfully."
 
-    def list_users(self):
-        return {'a':1, 'b':2}
+def list_rooms():
+    return list(rooms.keys())
+
+def list_users():
+    return list(users.keys())
     
 # falta remocao de usuarios, depois reler
 
-def main():
-    chat_server = ChatServer()
+class CustomXMLRPCServer(SimpleXMLRPCServer):
+    def log_message(self, format, *args):
+        # Sobrescreve para não exibir logs de requisições
+        pass
 
-    server = SimpleXMLRPCServer(('localhost', 9000), allow_none=True)
+def main():
+    # Use o servidor customizado
+    server = CustomXMLRPCServer(('localhost', 9000), allow_none=True)
     print("Servidor de chat pronto, aguardando conexões!")
 
-    server.register_function(chat_server.create_room, "create_room")
-    server.register_function(chat_server.join_room, "join_room")
-    server.register_function(chat_server.send_message, "send_message")
-    server.register_function(chat_server.list_rooms, "list_rooms")
-    server.register_function(chat_server.list_users, "list_users")
+    server.register_function(create_room, "create_room")
+    server.register_function(join_room, "join_room")
+    server.register_function(send_message, "send_message")
+    server.register_function(list_rooms, "list_rooms")
+    server.register_function(list_users, "list_users")
 
     binder = xmlrpc.client.ServerProxy('http://localhost:8001')
     binder.register_procedure('chat', 9000)
+
+    logging.getLogger('xmlrpc.server').setLevel(logging.CRITICAL)
 
     server.serve_forever()
 
