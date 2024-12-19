@@ -70,6 +70,9 @@ def send_message(username, room_name, message, recipient=None):
 
     return "Message sent successfully."
 
+def get_last_messages(room_name):
+    return rooms[room_name]['messages']
+
 def list_rooms():
     return list(rooms.keys())
 
@@ -87,6 +90,7 @@ def main():
     server.register_function(send_message, "send_message")
     server.register_function(list_rooms, "list_rooms")
     server.register_function(list_users, "list_users")
+    server.register_function(get_last_messages, "get_last_messages")
 
     binder = xmlrpc.client.ServerProxy('http://localhost:8001')
     binder.register_procedure('chat', 9000)
