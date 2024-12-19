@@ -8,14 +8,11 @@ currentMessagesQuantity = 0
 
 
 def get_hidden_input(prompt, timeout=1):
-    """
-    Lê a entrada do usuário na mesma linha sem exibir o que foi digitado.
-    """
+
     user_input = []
     stop_event = threading.Event()
 
     def read_input():
-        """Lê os caracteres digitados um a um."""
         sys.stdout.write(prompt)
         sys.stdout.flush()
         while not stop_event.is_set():
@@ -24,19 +21,15 @@ def get_hidden_input(prompt, timeout=1):
                 break
             user_input.append(char)
 
-        # Apaga o que foi digitado
         sys.stdout.write('\r' + ' ' * (len(prompt) + len(''.join(user_input))) + '\r')
         sys.stdout.flush()
 
-    # Cria a thread para capturar o input
     input_thread = threading.Thread(target=read_input, daemon=True)
     input_thread.start()
 
-    # Aguarda o tempo limite
     input_thread.join(timeout)
     stop_event.set()
 
-    # Se o usuário não digitou nada a tempo
     if not user_input:
         return ""
 
@@ -111,14 +104,13 @@ def client_menu(chat_server):
                 print(f"Room does not exist.")
 
         elif option == "3":
-            print(chat_server.list_users())
+            print(chat_server.list_users()) # precisa ser conectado numa sala
         elif option == "4":
             print(chat_server.get_last_messages())
         else:
             print("Invalid option, put a number in range 1 to 4!")
 
-# elif option == 4:
-# chat_server.Room.get_last_messages()
+
 
 
 server_address = 'localhost'

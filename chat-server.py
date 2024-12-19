@@ -38,7 +38,14 @@ def join_room(username, room_name):
     if room_name in rooms:
         room = rooms[room_name]
         # {'messages': {}, 'users': {}}
-        room['users'].append(username)
+        connectedUsers = room['users']
+        print("Connected Users: ")
+        for i in range(len(connectedUsers)):
+            print(connectedUsers[i])
+
+        connectedUsers.append(username)
+
+        room['messages'].append('O usuario ' + username + ' entrou na sala.')
 
         return True
     return False
