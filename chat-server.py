@@ -18,9 +18,9 @@ class User:
         self.name = name
         self.password = password
 
-def register_user(name, password):
+def register_user(name):
     if name not in users:
-        users[name] = User(name, password)
+        users[name] = name
         return f"User {name} registered successfully."
     return f"User {name} is already registered."
 
@@ -85,7 +85,7 @@ def list_rooms():
 
 def list_users():
     return list(users.keys())
-    
+
 # falta remocao de usuarios, depois reler
 
 def main():
@@ -98,6 +98,7 @@ def main():
     server.register_function(list_rooms, "list_rooms")
     server.register_function(list_users, "list_users")
     server.register_function(get_last_messages, "get_last_messages")
+    server.register_function(register_user, "register_user")
 
     binder = xmlrpc.client.ServerProxy('http://localhost:8001')
     binder.register_procedure('chat', 9000)
